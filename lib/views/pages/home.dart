@@ -51,7 +51,6 @@ class _HomePageState extends State<HomePage> {
   //function untuk  ambil data cost
   Future<List<Costs>> getCosts(
       var origin, var destinationId, var weight, var courier) async {
-    // dynamic result;
     try {
       List<Costs> costs = await MasterDataService.getCostes(
         origin,
@@ -59,11 +58,13 @@ class _HomePageState extends State<HomePage> {
         weight,
         courier,
       );
-      setState(() {
-        dataLength = costs.length;
-      });
+
+      dataLength = costs.length;
+
       return costs;
     } catch (error) {
+      
+      print("Error fetching costs: $error");
       return [];
     }
   }
@@ -99,7 +100,7 @@ class _HomePageState extends State<HomePage> {
                       children: [
                         const Row(
                           children: [
-                            Text("Layanan",
+                            Text("Jasa Pengiriman",
                                 style: TextStyle(
                                   fontWeight: FontWeight.w800,
                                 )),
@@ -256,9 +257,10 @@ class _HomePageState extends State<HomePage> {
                                           ?.map<DropdownMenuItem<City>>(
                                               (City itemCity) {
                                         return DropdownMenuItem(
-                                            value: itemCity,
-                                            child: Text(
-                                                itemCity.cityName.toString()));
+                                          value: itemCity,
+                                          child: Text(
+                                              itemCity.cityName.toString()),
+                                        );
                                       }).toList(),
                                       onChanged: (newItemCity) {
                                         setState(() {
@@ -270,7 +272,8 @@ class _HomePageState extends State<HomePage> {
                                       },
                                     );
                                   } else if (snapshot.hasError) {
-                                    return const Text("No Data");
+                                    return const Text(
+                                        "Error fetching city data");
                                   }
                                   return DropdownButton(
                                     isExpanded: true,
@@ -281,7 +284,8 @@ class _HomePageState extends State<HomePage> {
                                     style: const TextStyle(color: Colors.black),
                                     items: const [],
                                     onChanged: (value) {
-                                      Null;
+                                      // Do nothing or return
+                                      return;
                                     },
                                   );
                                 },
@@ -430,8 +434,8 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                   onPressed: () async {
                                     calculateCost = await getCosts(
-                                        cityOriginId,
-                                        cityDestinationId,
+                                        selectedCityOrigin.cityId,
+                                        selectedCityDestination.cityId,
                                         beratBarang.text,
                                         jasaPengiriman);
                                     setState(() {
@@ -465,9 +469,16 @@ class _HomePageState extends State<HomePage> {
                             child: Text("Tidak ada Data"),
                           )
                         : ListView.builder(
-                            itemCount: dataLength,
+                            itemCount: calculateCost != null
+                                ? calculateCost.length
+                                : 0,
                             itemBuilder: (context, index) {
-                              return cardTest(calculateCost[index]);
+                              if (calculateCost != null &&
+                                  calculateCost.isNotEmpty) {
+                                return cardTest(calculateCost[index]);
+                              } else {
+                                return const Text("No Data");
+                              }
                             },
                           ),
                   ),
